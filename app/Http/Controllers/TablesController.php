@@ -27,7 +27,9 @@ class TablesController extends Controller
      */
     public function view(Request $request,$tableName)
     {
-        $coulumns = DB::select("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'aid_master'");
+        $table=base64_decode($tableName);
+        
+        $coulumns = DB::select("SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$table'");
         $columnArr = array();
         foreach($coulumns as $val){
             if(!in_array($val->COLUMN_NAME, $columnArr))
@@ -37,5 +39,18 @@ class TablesController extends Controller
             'tableName' => $tableName,
             'columnArray' => $columnArr
         ]);
+    }
+
+
+    public function getRecords(Request $request)
+    {
+        $query = $request->input('query');
+        try {
+            $records = DB::select($query);
+            return response()->json(['records' => $records]);
+        } catch (\Exception $e) {
+            // Handle any exceptions, and return an error response
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

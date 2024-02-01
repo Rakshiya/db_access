@@ -1,14 +1,3 @@
-<head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css" />
-    <link href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>  
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.js"></script>
-    <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"></script>
-    <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
-</head>
-
 <section>
     <header>
         <div class="flex justify-between spacing-2">
@@ -58,15 +47,25 @@
             </div>
         </div>
     </div>
-    <form method="post" action="#" class="mt-6 space-y-6">
+    <div class="mt-6 space-y-6">
         <div>
             <x-input-label for="inputQuery" :value="__('Review Input Query')" />
             <x-text-input id="inputQuery" name="inputQuery" type="text" class="w-full" disabled />
         </div>
-        <x-primary-button>{{ __('Submit') }}</x-primary-button>
-    </form>
+        <x-primary-button id="submitBtn">{{ __('Submit') }}</x-primary-button>
+    </div>
+
+    <div id="tableContainer">
+        <table id="resultTable" class="table mt-6 space-y-6">
+            <thead>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
 </section>
 
+<!-- Open Popup -->
 <div class="modal fade" id="ajaxModel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -129,6 +128,8 @@
         })
         $(document).on('click', '#clear', function (e) {
             $('#inputQuery').val('');
+            $('#resultTable thead').html(''); // Clear table headers
+            $('#resultTable tbody').html(''); // Clear table body
         })
 
         /** Where clause conditions */
@@ -147,6 +148,9 @@
                 $('#saveBtn').on('click', function () {
                     var operator = $('#operatorDropdown').val();
                     var searchValue = $('#value').val();
+                    if (isNaN(searchValue)) {
+                        searchValue = "'" + searchValue + "'";
+                    } 
                     if (searchValue == '') {
                         alert('Please enter Value');
                     }
@@ -194,6 +198,49 @@
             }
         })
         /** group by clause conditions ends*/
+
+        $('#submitBtn').click(function (e) {
+            e.preventDefault();
+            var postQuery = $('#inputQuery').val();
+            console.log(postQuery);
+            $.ajax({
+                data: {query: postQuery},
+                url: "/records",
+                type: "POST",
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                success: function (data) {
+                    if (data.hasOwnProperty('records') && Array.isArray(data.records)) {
+                        var records = data.records;
+                        // Assuming the first record contains the column names
+                        var tableHeaders = '<tr>';
+                        for (var header in records[0]) {
+                            if (records[0].hasOwnProperty(header)) {
+                                tableHeaders += '<th>' + header + '</th>';
+                            }
+                        }
+                        tableHeaders += '</tr>';
+
+                        // Append table headers
+                        $('#resultTable thead').html(tableHeaders);
+                        // Append table rows
+                        for (var i = 0; i < records.length; i++) {
+                            var row = records[i];
+                            var tableRow = '<tr>';
+                            for (var prop in row) {
+                                if (row.hasOwnProperty(prop)) {
+                                    tableRow += '<td>' + row[prop] + '</td>';
+                                }
+                            }
+                            tableRow += '</tr>';
+                            $('#resultTable tbody').append(tableRow);
+                        }
+                    }    
+                },
+                error: function (data) {
+                    console.log('Error:', data);
+                }
+            });
+        });
 
     })
 </script>

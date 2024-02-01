@@ -37,6 +37,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/tables', [TablesController::class, 'showTables'])->name('tables.showTables');
     Route::get('/table/{tableName}', [TablesController::class, 'view'])->name('tables.view');
 
+    Route::post('/records', [TablesController::class, 'getRecords']);
+
 });
 
 require __DIR__.'/auth.php';

@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+#tableContainer {
+    max-width: 100%; /* Adjust the max-width as needed */
+    overflow-x: auto;
+}
+
+#resultTable {
+    width: 100%; /* Set table width to 100% */
+    border-collapse: collapse;
+}
+
+#resultTable th, #resultTable td {
+    border: 1px solid #ddd; /* Add borders to table cells if needed */
+    padding: 8px; /* Adjust padding as needed */
+    text-align: left;
+}
